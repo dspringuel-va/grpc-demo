@@ -22,10 +22,9 @@ func (fibServer *fibonacciServer) GetFibonnaciNumber(ctx context.Context, reques
 	}
 	var fn int32 = 1
 	var fnMinusOne int32
-	var fnMinusTwo int32
 	var i int32
 	for i = 2; i <= request.N; i++ {
-		fn, fnMinusOne, fnMinusTwo = fnMinusOne+fnMinusTwo, fn, fnMinusOne
+		fn, fnMinusOne = fn+fnMinusOne, fn
 	}
 
 	return &fibonacci.FibonacciResponse{FN: fn}, nil
