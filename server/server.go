@@ -5,7 +5,7 @@ import (
 	"log"
 	"net"
 
-	"github.com/dspringuel-va/grpc-demo/fibonacci"
+	fibonacci "github.com/dspringuel-va/grpc-demo/protos"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )
