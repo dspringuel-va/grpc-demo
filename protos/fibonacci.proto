@@ -11,4 +11,5 @@ message FibonacciResponse {
 
 service FibonnaciService {
   rpc GetFibonnaciNumber(FibonacciRequest) returns (FibonacciResponse);
+  rpc GetAllFibonacciNumber(FibonacciRequest) returns (stream FibonacciResponse);
 }
