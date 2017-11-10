@@ -5,19 +5,20 @@ import (
 	"log"
 	"net"
 
-	context "golang.org/x/net/context"
-	grpc "google.golang.org/grpc"
+	"github.com/dspringuel-va/grpc-demo/fibonacci"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 type fibonacciServer struct {
 }
 
-func (fibServer *fibonacciServer) GetFibonnaciNumber(ctx context.Context, request *FibonacciRequest) (*FibonacciResponse, error) {
+func (fibServer *fibonacciServer) GetFibonnaciNumber(ctx context.Context, request *fibonacci.FibonacciRequest) (*fibonacci.FibonacciResponse, error) {
 	if request.GetN() == 0 {
-		return &FibonacciResponse{FN: 0}, nil
+		return &fibonacci.FibonacciResponse{FN: 0}, nil
 	}
 	if request.GetN() == 1 {
-		return &FibonacciResponse{FN: 1}, nil
+		return &fibonacci.FibonacciResponse{FN: 1}, nil
 	}
 	var fn int32 = 1
 	var fnMinusOne int32
@@ -27,7 +28,7 @@ func (fibServer *fibonacciServer) GetFibonnaciNumber(ctx context.Context, reques
 		fn, fnMinusOne, fnMinusTwo = fnMinusOne+fnMinusTwo, fn, fnMinusOne
 	}
 
-	return &FibonacciResponse{FN: fn}, nil
+	return &fibonacci.FibonacciResponse{FN: fn}, nil
 }
 
 func main() {
@@ -38,6 +39,7 @@ func main() {
 	}
 
 	grcpServer := grpc.NewServer()
-	RegisterFibonnaciServiceServer(grcpServer, new(fibonacciServer))
+	fibonacci.RegisterFibonnaciServiceServer(grcpServer, new(fibonacciServer))
+	fmt.Println("Listening to port 4678")
 	grcpServer.Serve(lis)
 }
