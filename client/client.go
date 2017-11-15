@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 
 	fibonacci "github.com/dspringuel-va/grpc-demo/protos"
@@ -12,7 +13,8 @@ import (
 )
 
 var (
-	n = flag.Int("n", 0, "Wanted Fibonacci Number")
+	n   = flag.Int("n", 0, "Wanted Fibonacci Number")
+	all = flag.Bool("a", false, "Is streaming all numbers")
 )
 
 func main() {
@@ -27,7 +29,19 @@ func main() {
 
 	client := fibonacci.NewFibonnaciServiceClient(conn)
 
-	fibonacciResponse, fibErr := client.GetFibonnaciNumber(context.Background(), &fibonacci.FibonacciRequest{N: int32(*n)})
+	if !*all {
+		fibonacciResponse, fibErr := client.GetFibonnaciNumber(context.Background(), &fibonacci.FibonacciRequest{N: int32(*n)})
+		fmt.Printf("GetFibonacciNumber(%d): %d (%v)", *n, fibonacciResponse.FN, fibErr)
 
-	fmt.Printf("GetFibonacciNumber(%d): %d (%v)", *n, fibonacciResponse.FN, fibErr)
+	} else {
+		fibonacciResponseStream, fibErr := client.GetAllFibonacciNumbers(context.Background(), &fibonacci.FibonacciRequest{N: int32(*n)})
+		fmt.Printf("GetAllFibonacciNumbers(%d) %v: ", *n, fibErr)
+		for {
+			fibResponse, err := fibonacciResponseStream.Recv()
+			if err == io.EOF {
+				break
+			}
+			fmt.Printf("%d ", fibResponse.FN)
+		}
+	}
 }

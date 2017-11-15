@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	fibonacci "github.com/dspringuel-va/grpc-demo/protos"
 	"golang.org/x/net/context"
@@ -14,20 +15,32 @@ type fibonacciServer struct {
 }
 
 func (fibServer *fibonacciServer) GetFibonnaciNumber(ctx context.Context, request *fibonacci.FibonacciRequest) (*fibonacci.FibonacciResponse, error) {
-	if request.GetN() == 0 {
-		return &fibonacci.FibonacciResponse{FN: 0}, nil
+	return &fibonacci.FibonacciResponse{FN: fibNumber(request.N)}, nil
+}
+
+func (fibServer *fibonacciServer) GetAllFibonacciNumbers(request *fibonacci.FibonacciRequest, stream fibonacci.FibonnaciService_GetAllFibonacciNumbersServer) error {
+	for i := int32(0); i <= request.N; i++ {
+		if err := stream.Send(&fibonacci.FibonacciResponse{FN: fibNumber(i)}); err != nil {
+			return err
+		}
+		time.Sleep(500 * time.Millisecond)
 	}
-	if request.GetN() == 1 {
-		return &fibonacci.FibonacciResponse{FN: 1}, nil
+
+	return nil
+}
+
+func fibNumber(n int32) int32 {
+	if n == 0 || n == 1 {
+		return n
 	}
-	var fn int32 = 1
-	var fnMinusOne int32
-	var i int32
-	for i = 2; i <= request.N; i++ {
+
+	fn := int32(1)
+	fnMinusOne := int32(0)
+	for i := int32(2); i <= n; i++ {
 		fn, fnMinusOne = fn+fnMinusOne, fn
 	}
 
-	return &fibonacci.FibonacciResponse{FN: fn}, nil
+	return fn
 }
 
 func main() {
