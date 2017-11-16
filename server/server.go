@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
+	"strings"
 	"time"
 
 	fibonacci "github.com/dspringuel-va/grpc-demo/protos"
@@ -27,6 +29,25 @@ func (fibServer *fibonacciServer) GetAllFibonacciNumbers(request *fibonacci.Fibo
 	}
 
 	return nil
+}
+
+func (fibServer *fibonacciServer) JoinFibonacciNumbers(stream fibonacci.FibonnaciService_JoinFibonacciNumbersServer) error {
+
+	var clientFibNumbers []string
+
+	for {
+		fibRequest, err := stream.Recv()
+
+		if err == io.EOF {
+			return stream.SendAndClose(&fibonacci.JoinedFibonacciResponse{JoinedFN: strings.Join(clientFibNumbers, " - ")})
+		}
+
+		if err != nil {
+			return err
+		}
+
+		clientFibNumbers = append(clientFibNumbers, fmt.Sprintf("%d", fibNumber(fibRequest.N)))
+	}
 }
 
 func fibNumber(n int32) int32 {

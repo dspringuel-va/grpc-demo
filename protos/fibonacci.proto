@@ -9,7 +9,12 @@ message FibonacciResponse {
   int32 f_n = 1;
 };
 
+message JoinedFibonacciResponse {
+  string joined_f_n = 1;
+}
+
 service FibonnaciService {
   rpc GetFibonnaciNumber(FibonacciRequest) returns (FibonacciResponse);
   rpc GetAllFibonacciNumbers(FibonacciRequest) returns (stream FibonacciResponse);
+  rpc JoinFibonacciNumbers(stream FibonacciRequest) returns (JoinedFibonacciResponse);
 }
