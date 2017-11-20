@@ -18,11 +18,14 @@ type fibonacciServer struct {
 }
 
 func (fibServer *fibonacciServer) GetFibonnaciNumber(ctx context.Context, request *fibonacci.FibonacciRequest) (*fibonacci.FibonacciResponse, error) {
+	fmt.Printf("\nGetFibonnaciNumber: %d\n", request.N)
 	return &fibonacci.FibonacciResponse{FN: fibNumber(request.N)}, nil
 }
 
 func (fibServer *fibonacciServer) GetAllFibonacciNumbers(request *fibonacci.FibonacciRequest, stream fibonacci.FibonnaciService_GetAllFibonacciNumbersServer) error {
+	fmt.Printf("\nGetAllFibonacciNumbers: %d\n", request.N)
 	for i := int32(0); i <= request.N; i++ {
+		fmt.Printf("Sending FN(%d)\n", i)
 		if err := stream.Send(&fibonacci.FibonacciResponse{FN: fibNumber(i)}); err != nil {
 			return err
 		}
@@ -33,13 +36,13 @@ func (fibServer *fibonacciServer) GetAllFibonacciNumbers(request *fibonacci.Fibo
 }
 
 func (fibServer *fibonacciServer) JoinFibonacciNumbers(stream fibonacci.FibonnaciService_JoinFibonacciNumbersServer) error {
-
+	fmt.Printf("\nJoinFibonacciNumbers\n")
 	var clientFibNumbers []string
 
 	for {
 		fibRequest, err := stream.Recv()
-
 		if err == io.EOF {
+			fmt.Printf("\nClient has stopped streaming\n")
 			return stream.SendAndClose(&fibonacci.JoinedFibonacciResponse{JoinedFN: strings.Join(clientFibNumbers, " - ")})
 		}
 
@@ -47,11 +50,13 @@ func (fibServer *fibonacciServer) JoinFibonacciNumbers(stream fibonacci.Fibonnac
 			return err
 		}
 
+		fmt.Printf("Joining %d\n", fibNumber(fibRequest.N))
 		clientFibNumbers = append(clientFibNumbers, fmt.Sprintf("%d", fibNumber(fibRequest.N)))
 	}
 }
 
 func (fibServer *fibonacciServer) ElevatorFibonacci(stream fibonacci.FibonnaciService_ElevatorFibonacciServer) error {
+	fmt.Printf("\nElevatorFibonacci\n")
 
 	i := int32(10)
 	mod := int32(1)
@@ -59,8 +64,9 @@ func (fibServer *fibonacciServer) ElevatorFibonacci(stream fibonacci.FibonnaciSe
 		for {
 			if newI := i + mod; newI >= 0 && newI <= 20 {
 				i = newI
+				fmt.Printf("Sending FN(%d)\n", i)
 				if err := stream.Send(&fibonacci.FibonacciResponse{FN: fibNumber(i)}); err != nil {
-					fmt.Printf("Client has stopped streaming (%v)", err)
+					fmt.Printf("Client has stopped streaming (%v)\n", err)
 					return
 				}
 			}
@@ -79,6 +85,7 @@ func (fibServer *fibonacciServer) ElevatorFibonacci(stream fibonacci.FibonnaciSe
 			return err
 		}
 
+		fmt.Printf("Receiving Switch\n")
 		mod = mod * -1
 	}
 }
