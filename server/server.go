@@ -105,7 +105,7 @@ func fibNumber(n int32) int32 {
 }
 
 func main() {
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:4678"))
+	lis, err := net.Listen("tcp", "localhost:4678")
 
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
