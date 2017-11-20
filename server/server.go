@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"net"
 	"strings"
 	"time"
@@ -47,6 +48,38 @@ func (fibServer *fibonacciServer) JoinFibonacciNumbers(stream fibonacci.Fibonnac
 		}
 
 		clientFibNumbers = append(clientFibNumbers, fmt.Sprintf("%d", fibNumber(fibRequest.N)))
+	}
+}
+
+func (fibServer *fibonacciServer) ElevatorFibonacci(stream fibonacci.FibonnaciService_ElevatorFibonacciServer) error {
+
+	i := int32(10)
+	mod := int32(1)
+	go func(stream fibonacci.FibonnaciService_ElevatorFibonacciServer) {
+		for {
+			if newI := i + mod; newI >= 0 && newI <= 20 {
+				i = newI
+				if err := stream.Send(&fibonacci.FibonacciResponse{FN: fibNumber(i)}); err != nil {
+					fmt.Printf("Client has stopped streaming (%v)", err)
+					return
+				}
+			}
+
+			time.Sleep(time.Duration(50+rand.Intn(300)) * time.Millisecond)
+		}
+	}(stream)
+
+	for {
+		_, err := stream.Recv()
+
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+
+		mod = mod * -1
 	}
 }
 

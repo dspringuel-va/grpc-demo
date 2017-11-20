@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/rand"
 	"time"
 
 	fibonacci "github.com/dspringuel-va/grpc-demo/protos"
@@ -14,9 +15,10 @@ import (
 )
 
 var (
-	n    = flag.Int("n", 0, "Wanted Fibonacci Number")
-	all  = flag.Bool("a", false, "Is streaming all numbers")
-	join = flag.Bool("j", false, "Is server joined client streamed number")
+	n        = flag.Int("n", 0, "Wanted Fibonacci Number")
+	all      = flag.Bool("a", false, "Is streaming all numbers")
+	join     = flag.Bool("j", false, "Is server joined client streamed number")
+	elevator = flag.Bool("e", false, "Elevator Fibonacci")
 )
 
 func main() {
@@ -58,6 +60,41 @@ func main() {
 		joinedFib, joinErr := fibonacciStream.CloseAndRecv()
 
 		fmt.Printf("\nJoinFibonacciNumbers: %s (%v)", joinedFib.JoinedFN, joinErr)
+
+	} else if *elevator {
+
+		stream, fibErr := client.ElevatorFibonacci(context.Background())
+		fmt.Printf("Elevator (%v)\n", fibErr)
+
+		waitCompleted := make(chan struct{})
+
+		fmt.Printf("Response: \n")
+		go func(stream fibonacci.FibonnaciService_ElevatorFibonacciClient) {
+			for {
+				fibResponse, err := stream.Recv()
+				if err == io.EOF {
+					fmt.Printf("\nServer ended streaming")
+					close(waitCompleted)
+					return
+				}
+				if err != nil {
+					log.Fatalf("Elevator error %v", err)
+				}
+				fmt.Printf(" %d", fibResponse.FN)
+			}
+		}(stream)
+
+		for i := int32(0); i < 5; i++ {
+			time.Sleep(time.Duration(2000+rand.Intn(1000)) * time.Millisecond)
+			fmt.Printf("\nSending switch\n")
+			stream.Send(&fibonacci.SwitchRequest{})
+		}
+
+		time.Sleep(2 * time.Second)
+		fmt.Printf("\n\nClose client connection")
+		stream.CloseSend()
+		<-waitCompleted
+		fmt.Printf("\nElevator ended")
 
 	} else {
 		fibonacciResponse, fibErr := client.GetFibonnaciNumber(context.Background(), &fibonacci.FibonacciRequest{N: int32(*n)})

@@ -13,8 +13,11 @@ message JoinedFibonacciResponse {
   string joined_f_n = 1;
 }
 
+message SwitchRequest {}
+
 service FibonnaciService {
   rpc GetFibonnaciNumber(FibonacciRequest) returns (FibonacciResponse);
   rpc GetAllFibonacciNumbers(FibonacciRequest) returns (stream FibonacciResponse);
   rpc JoinFibonacciNumbers(stream FibonacciRequest) returns (JoinedFibonacciResponse);
+  rpc ElevatorFibonacci(stream SwitchRequest ) returns (stream FibonacciResponse);
 }
