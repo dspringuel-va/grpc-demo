@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"google.golang.org/grpc/credentials"
+
 	fibonacci "github.com/dspringuel-va/grpc-demo/protos"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -105,13 +107,19 @@ func fibNumber(n int32) int32 {
 }
 
 func main() {
+
+	creds, err := credentials.NewServerTLSFromFile("cert/domain.crt", "cert/private.key")
+	if err != nil {
+		log.Fatalf("Failed to generate credentials: %v", err)
+	}
+
 	lis, err := net.Listen("tcp", "localhost:4678")
 
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	grcpServer := grpc.NewServer()
+	grcpServer := grpc.NewServer(grpc.Creds(creds))
 	fibonacci.RegisterFibonnaciServiceServer(grcpServer, new(fibonacciServer))
 	fmt.Println("Listening to port 4678")
 	grcpServer.Serve(lis)

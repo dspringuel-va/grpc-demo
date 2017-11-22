@@ -9,6 +9,8 @@ import (
 	"math/rand"
 	"time"
 
+	"google.golang.org/grpc/credentials"
+
 	fibonacci "github.com/dspringuel-va/grpc-demo/protos"
 
 	"google.golang.org/grpc"
@@ -24,7 +26,12 @@ var (
 func main() {
 	flag.Parse()
 
-	conn, err := grpc.Dial("localhost:4678", grpc.WithInsecure())
+	creds, err := credentials.NewClientTLSFromFile("cert/domain.crt", "")
+	if err != nil {
+		log.Fatalf("Fail to create credentials: %v", err)
+	}
+
+	conn, err := grpc.Dial("localhost:4678", grpc.WithTransportCredentials(creds))
 
 	if err != nil {
 		log.Fatalf("Fail to dial: %v", err)
@@ -98,6 +105,9 @@ func main() {
 
 	} else {
 		fibonacciResponse, fibErr := client.GetFibonnaciNumber(context.Background(), &fibonacci.FibonacciRequest{N: int32(*n)})
-		fmt.Printf("GetFibonacciNumber(%d): %d (%v)", *n, fibonacciResponse.FN, fibErr)
+		if fibErr != nil {
+			log.Fatalf("Error while getting fibonacci number: %v", fibErr)
+		}
+		fmt.Printf("GetFibonacciNumber(%d): %d", *n, fibonacciResponse.FN)
 	}
 }

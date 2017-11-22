@@ -1,1 +1,2 @@
 protos/*.pb.go
+cert
